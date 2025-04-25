@@ -1,5 +1,5 @@
 import sys
-
+from maya_widget import MayaSpectrometerWidget
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 if __name__ == "__main__":
@@ -8,4 +8,6 @@ if __name__ == "__main__":
     window = QMainWindow()
     window.show()
 
+    mainWidget = MayaSpectrometerWidget()
+    window.setCentralWidget(mainWidget)
     app.exec_()
