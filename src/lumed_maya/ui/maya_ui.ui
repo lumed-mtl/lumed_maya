@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>765</width>
+    <width>704</width>
     <height>605</height>
    </rect>
   </property>
@@ -19,11 +19,14 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="groupBoxConnection">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
          <horstretch>0</horstretch>
@@ -35,32 +38,45 @@
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QLabel" name="label">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <layout class="QHBoxLayout" name="horizontalLayoutStatus">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetDefaultConstraint</enum>
           </property>
-          <property name="text">
-           <string>TextLabel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="comboBoxAvailableDevices">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QPushButton" name="pushButtonConnectDevice">
+           <widget class="QLabel" name="label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Status:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="labelStatus">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayoutConnection">
+          <item>
+           <widget class="QPushButton" name="pushButtonConnect">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -73,7 +89,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButtonDisconnectDevice">
+           <widget class="QPushButton" name="pushButtonDisconnect">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -92,28 +108,21 @@
      </item>
      <item>
       <widget class="QGroupBox" name="groupBoxSettings">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title">
         <string>Settings</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="2" column="1">
-         <widget class="QSpinBox" name="spinBoxGain"/>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Gain</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="labelExposure">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -121,12 +130,12 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Exposure</string>
+           <string>Exposure (ms)</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QSpinBox" name="spinBoxExposure"/>
+        <item row="1" column="2">
+         <widget class="QDoubleSpinBox" name="doubleSpinBoxExposure"/>
         </item>
        </layout>
       </widget>
@@ -134,7 +143,24 @@
     </layout>
    </item>
    <item>
-    <widget class="QWidget" name="widgetPlot" native="true"/>
+    <widget class="QWidget" name="widgetPlot" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayoutPlot" stretch="">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMaximumSize</enum>
+        </property>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButtonMeasure">
+     <property name="text">
+      <string>Measure</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
