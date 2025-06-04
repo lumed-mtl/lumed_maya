@@ -1,0 +1,18 @@
+{
+  "editor.formatOnSave": true,
+  "isort.args": ["--profile=black"],
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "editor.defaultFormatter": "ms-python.black-formatter",
+  "pylint.args": ["--disable=C,R,W0718", "--extension-pkg-whitelist=PyQt5"],
+  "pylint.severity": {
+    "convention": "Information",
+    "error": "Error",
+    "fatal": "Error",
+    "refactor": "Hint",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "autoDocstring.docstringFormat": "sphinx"
+}

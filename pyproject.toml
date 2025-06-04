@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "lumed_maya"
+version = "0.1"
+authors = [
+    # { name = "Najib Nassiri", email = "" },
+    { name = "Guillaume Sheehy", email = "guillaume.sheehy@polymtl.ca" },
+]
+dependencies = []
+description = "A module to control the Ocean Insight Maya porable spectrometer"
+readme = "README.md"
+requires-python = ">=3.8"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
+[tool.setuptools.dynamic]
+version = { attr = "iadpython.__version__" }
