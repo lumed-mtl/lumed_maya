@@ -59,7 +59,8 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         self.labelStatus.setText("Not connected")
         self.verticalLayoutPlot.addWidget(self.disp.canvas)
         self.verticalLayoutPlot.addWidget(self.disp.toolbar)
-
+        self.update_ui()
+        
     def connect_ui_signals(self):
         self.pushButtonConnect.clicked.connect(self.connect_mayaspectro)
         self.pushButtonDisconnect.clicked.connect(self.disconnect_mayaspectro)
@@ -103,7 +104,7 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
     def update_ui(self):
         # Enable/disable controls if laser is connected or not
         is_connected = self.mayaspectro.isconnected
-        print("isconnected", is_connected)
+        print(" Maya connected ?: ", is_connected)
         self.pushButtonConnect.setEnabled(not is_connected)
         self.pushButtonDisconnect.setEnabled(is_connected)
         self.pushButtonMeasure.setEnabled(is_connected)
