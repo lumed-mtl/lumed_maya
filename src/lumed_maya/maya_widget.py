@@ -12,7 +12,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 
 from lumed_maya.ui.maya_ui import Ui_widgetMayaSpectrometer
-from maya_control import MayaSpectrometer
+from lumed_maya.maya_control import MayaSpectrometer
 
 class DataDisplayWidget(QWidget):
   
