@@ -10,12 +10,52 @@ from matplotlib.figure import Figure
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+import pyqt5_fugueicons as fugue
 
 from lumed_maya.ui.maya_ui import Ui_widgetMayaSpectrometer
 from lumed_maya.maya_control import MayaSpectrometer
 
+logger = logging.getLogger(__name__)
+
+LOGS_DIR = Path.home() / "logs/maya_spectro"
+LOG_PATH = LOGS_DIR / f"{strftime('%Y_%m_%d_%H_%M_%S')}.log"
+
+spectro_state = {0: "Idle", 1: "Measuring", 2: "Not connected"}
+STATE_COLORS = {
+    0: "QLabel { background-color : blue; }",
+    1: "QLabel { background-color : red; }",
+    2: "QLabel { background-color : grey; }",
+}
+
+LOG_FORMAT = (
+    "%(asctime)s - %(levelname)s"
+    "(%(filename)s:%(funcName)s)"
+    "(%(filename)s:%(lineno)d) - "
+    "%(message)s"
+)
+
+
+def configure_logger():
+    """Configures the logger if lumed_HL_2000_HP_232R is launched as a module"""
+
+    if not LOGS_DIR.parent.exists():
+        LOGS_DIR.parent.mkdir()
+    if not LOGS_DIR.exists():
+        LOGS_DIR.mkdir()
+
+    formatter = logging.Formatter(LOG_FORMAT)
+
+    terminal_handler = logging.StreamHandler()
+    terminal_handler.setFormatter(formatter)
+    file_handler = logging.FileHandler(LOG_PATH)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(terminal_handler)
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.DEBUG)
+
 class DataDisplayWidget(QWidget):
-  
+    """ Widget to display spectrometer data on MayaSpectrometerWidget"""
     def __init__(self, parent=None):
         
         super().__init__(parent)
@@ -45,71 +85,120 @@ class DataDisplayWidget(QWidget):
         self.canvas.draw()
 
 class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
+    """User Interface for Maya 2000pro spectrometer.
+    Subclass MayaSpectrometerWidget to customize the Ui_widgetMayaSpectrometer widget"""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+
+        # logger
+        logger.info("Widget intialization")
+
         self.mayaspectro: MayaSpectrometer = MayaSpectrometer()
         self.disp = DataDisplayWidget(self) # Data display 
         self.setup_default_ui()
         self.connect_ui_signals()
+        self.update_ui()
+        logger.info("Widget initialization complete")
         
 
     def setup_default_ui(self):
-        self.labelStatus.setStyleSheet("background-color: white; color: red;")
-        self.labelStatus.setText("Not connected")
+        self.pushbtnFindSpectro.setIcon(fugue.icon("magnifier-left"))
         self.verticalLayoutPlot.addWidget(self.disp.canvas)
         self.verticalLayoutPlot.addWidget(self.disp.toolbar)
-        self.update_ui()
-        
     def connect_ui_signals(self):
+        self.pushbtnFindSpectro.clicked.connect(self.find_spectro)
         self.pushButtonConnect.clicked.connect(self.connect_mayaspectro)
         self.pushButtonDisconnect.clicked.connect(self.disconnect_mayaspectro)
         self.doubleSpinBoxExposure.valueChanged.connect(self.getExposure)
         self.pushButtonMeasure.clicked.connect(self.getSpectrum)
     
+    def find_spectro(self):
+        logger.info("Looking for connected spectros")
+        self.pushbtnFindSpectro.setEnabled(False)
+        self.pushbtnFindSpectro.setIcon(fugue.icon("hourglass"))
+        self.repaint()
+        try:
+            spectros = self.mayaspectro.find_spectros()
+            logger.info("Found spectrometers : %s", spectros)
+            self.comboBoxAvailableSpectro.clear()
+            for spectro in spectros:
+                self.comboBoxAvailableSpectro.addItem(f"{spectro.model}:{spectro.serial_number}")
+        except Exception as e:
+            logger.error(e, exc_info=True)
+        self.pushbtnFindSpectro.setEnabled(True)
+        self.pushbtnFindSpectro.setIcon(fugue.icon("magnifier-left"))
+        self.update_ui()
+
     def connect_mayaspectro(self):
+        logger.info("Connecting spectrometer")
         self.pushButtonConnect.setEnabled(False)
         if self.mayaspectro.isSpectroAvailable():
-            self.mayaspectro.connect()
-            self.labelStatus.setStyleSheet("background-color: white; color: green;")
-            self.labelStatus.setText("Connected")
-            self.doubleSpinBoxExposure.setRange(self.mayaspectro.get_exposure_time_lims()[0], 
-                                      self.mayaspectro.get_exposure_time_lims()[1])
+            try:
+                combobox_spectro_name = self.comboBoxAvailableSpectro.currentText()
+                devices = self.mayaspectro.find_spectros()
+                for device in devices:
+                    if device.serial_number == combobox_spectro_name.split(":")[-1]:
+                        self.mayaspectro.device = device
+                self.mayaspectro.connect()
+                self.doubleSpinBoxExposure.setRange(self.mayaspectro.get_exposure_time_lims()[0], 
+                                        self.mayaspectro.get_exposure_time_lims()[1])
+            except Exception as e:
+                logger.error(e, exc_info=True)
         else:
             print("Maya spectrometer not available")
         self.update_ui()
     def disconnect_mayaspectro(self):
+        logger.info("Disconnecting spectrometer")
         self.pushButtonDisconnect.setEnabled(False)
         try:
             self.mayaspectro.disconnect() 
-            self.labelStatus.setStyleSheet("background-color: white; color: red;")
-            self.labelStatus.setText("Not connected")
         except:
             if self.mayaspectro.isSpectroAvailable() == False:
                 print("Maya spectrometer not available")
             raise Exception("No spectrometer available")
         self.update_ui()
-
+        logger.info("Disconnected spectrometer")
     def getExposure(self):
-        print(f"Exposure set to: {self.doubleSpinBoxExposure.value()}")
+        logger.info("Setting Exposure time to : %s", self.doubleSpinBoxExposure.value())
         return self.doubleSpinBoxExposure.value()
     
     def getSpectrum(self):
         self.pushButtonMeasure.setEnabled(False)
+        logger.info("Acquiring spectrum")
         if self.mayaspectro.isconnected:
             wavelengths, intensities = self.mayaspectro.spectrum_acquisition(self.getExposure())
             self.disp.ax.cla() #Clears axis
             self.disp.plot_basic_line(wavelengths,intensities, label=f"acquisition")
+            logger.info("Spectrum acquired")
         self.update_ui()
+    
+    def setLabelConnected(self, isconnected: bool) -> None:
+        if isconnected:
+            self.labelStatus.setStyleSheet("background-color: white; color: green;")
+            self.labelStatus.setText("Connected")
+        else:
+            self.labelStatus.setStyleSheet("background-color: white; color: red;")
+            self.labelStatus.setText("Not connected")
+    
     def update_ui(self):
         # Enable/disable controls if laser is connected or not
         is_connected = self.mayaspectro.isconnected
-        print(" Maya connected ?: ", is_connected)
         self.pushButtonConnect.setEnabled(not is_connected)
+        self.comboBoxAvailableSpectro.setEnabled(not is_connected)
         self.pushButtonDisconnect.setEnabled(is_connected)
+        self.setLabelConnected(is_connected)
         self.pushButtonMeasure.setEnabled(is_connected)
-
+        if is_connected:
+            self.textEditModel.setText(self.mayaspectro.spectro.model)
+            self.textEditSN.setText(self.mayaspectro.spectro.serial_number)
+        
+        
 if __name__ == "__main__":
+
+    # Set up logging
+    configure_logger()
 
     # Create app window
     app = QApplication(sys.argv)
