@@ -5,8 +5,22 @@ from seabreeze.spectrometers import list_devices, Spectrometer
 class MayaSpectrometer:
 
     def __init__(self):
-        self.spectro = None
+        self.spectro: Spectrometer = None
+        self.device = None
+        self.spectro_id: str = None
         self.isconnected = False
+    
+    def find_spectros(self):
+        """
+        find_spectros finds available devices
+
+        Returns
+        -------
+        available_spectros: list of available devices
+        """
+        available_spectros = list_devices()
+        return available_spectros
+    
     def isSpectroAvailable(self):
         """
         Checks if any spectrometers are available to be connected
@@ -15,13 +29,11 @@ class MayaSpectrometer:
             return True
         else:
             return False
-    
     def connect(self):
         """
-        Connect the first available spectrometer to computer
+        Connect to requested spectrometer
         """
-        #Connect first available spectrometer
-        self.spectro = Spectrometer.from_first_available()
+        self.spectro = Spectrometer(self.device)
         self.isconnected = True
         print(f"Connected to spectrometer: {self.spectro}")
 
@@ -53,13 +65,26 @@ class MayaSpectrometer:
     def get_exposure_time_lims(self):
         """Returns the upper and lower bounds of exposure time possible with the current spectrometer self.spectro"""
         return self.spectro.integration_time_micros_limits[0]/1000, self.spectro.integration_time_micros_limits[1]/1000
+    
+    def get_model(self):
+        """Returns the connected spectrometer's model"""
+        return self.spectro.model
+    
+    def get_serial_number(self):
+        """Returns the connected spectrometer's serial number"""
+        return self.spectro.serial_number
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     spectro = MayaSpectrometer()
+    spectro.device = spectro.find_spectros()[0]
+    print("available devices:", spectro.find_spectros())
     print("Maya available:", spectro.isSpectroAvailable())
+    # spectro.connect2()
+    # print(type(spectro.spectro))
     spectro.connect()
+    print(type(spectro.spectro))
     print("Maya available2:", spectro.isSpectroAvailable())
     print("Maya spectro max count:", spectro.get_max_intensity())
     print("Maya exposure limits:", spectro.get_exposure_time_lims(),"ms")
