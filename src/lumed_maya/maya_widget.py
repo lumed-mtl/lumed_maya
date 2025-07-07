@@ -5,7 +5,7 @@ from time import strftime
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import  NavigationToolbar2QT, FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 from PyQt5.QtCore import QTimer
@@ -54,35 +54,38 @@ def configure_logger():
     logger.addHandler(file_handler)
     logger.setLevel(logging.DEBUG)
 
+
 class DataDisplayWidget(QWidget):
-    """ Widget to display spectrometer data on MayaSpectrometerWidget"""
+    """Widget to display spectrometer data on MayaSpectrometerWidget"""
+
     def __init__(self, parent=None):
-        
+
         super().__init__(parent)
         fig = Figure(figsize=(5, 5))
         self.canvas = FigureCanvasQTAgg(fig)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         self.ax = self.canvas.figure.add_subplot(111)
 
-    def plot_basic_line(self, x, y, label, xlim = None):
+    def plot_basic_line(self, x, y, label, xlim=None):
         corrected = np.nan_to_num(y, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
-        self.ax.plot(x, y, label = f"{label}")
-        #Set x axis
+        self.ax.plot(x, y, label=f"{label}")
         self.ax.set_xlabel("wavelength (nm)")
         self.ax.set_ylabel("intensity")
+        # Set x axis
         if xlim != None:
-            self.ax.set_xlim(xlim,x[-1])
+            self.ax.set_xlim(xlim, x[-1])
             # new x limits
             x_min, x_max = self.ax.get_xlim()
             # Filter the data based on x limits
             mask = (x >= x_min) & (x <= x_max)
             y_visible = corrected[mask]
             # Adjust y-axis limits based on visible data
-            spacing = 0.05*(y_visible.max() - y_visible.min())
-            self.ax.set_ylim(y_visible.min()-spacing, y_visible.max()+spacing)
-        #Refresh canvas
+            spacing = 0.05 * (y_visible.max() - y_visible.min())
+            self.ax.set_ylim(y_visible.min() - spacing, y_visible.max() + spacing)
+        # Refresh canvas
         self.ax.legend()
         self.canvas.draw()
+
 
 class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
     """User Interface for Maya 2000pro spectrometer.
@@ -96,24 +99,24 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         logger.info("Widget intialization")
 
         self.mayaspectro: MayaSpectrometer = MayaSpectrometer()
-        self.disp = DataDisplayWidget(self) # Data display 
+        self.disp = DataDisplayWidget(self)  # Data display
         self.setup_default_ui()
         self.connect_ui_signals()
         self.update_ui()
         logger.info("Widget initialization complete")
-        
 
     def setup_default_ui(self):
         self.pushbtnFindSpectro.setIcon(fugue.icon("magnifier-left"))
         self.verticalLayoutPlot.addWidget(self.disp.canvas)
         self.verticalLayoutPlot.addWidget(self.disp.toolbar)
+
     def connect_ui_signals(self):
         self.pushbtnFindSpectro.clicked.connect(self.find_spectro)
         self.pushButtonConnect.clicked.connect(self.connect_mayaspectro)
         self.pushButtonDisconnect.clicked.connect(self.disconnect_mayaspectro)
         self.doubleSpinBoxExposure.valueChanged.connect(self.getExposure)
         self.pushButtonMeasure.clicked.connect(self.getSpectrum)
-    
+
     def find_spectro(self):
         logger.info("Looking for connected spectros")
         self.pushbtnFindSpectro.setEnabled(False)
@@ -124,7 +127,9 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
             logger.info("Found spectrometers : %s", spectros)
             self.comboBoxAvailableSpectro.clear()
             for spectro in spectros:
-                self.comboBoxAvailableSpectro.addItem(f"{spectro.model}:{spectro.serial_number}")
+                self.comboBoxAvailableSpectro.addItem(
+                    f"{spectro.model}:{spectro.serial_number}"
+                )
         except Exception as e:
             logger.error(e, exc_info=True)
         self.pushbtnFindSpectro.setEnabled(True)
@@ -134,7 +139,7 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
     def connect_mayaspectro(self):
         logger.info("Connecting spectrometer")
         self.pushButtonConnect.setEnabled(False)
-        if self.mayaspectro.isSpectroAvailable():
+        if self.mayaspectro.is_spectro_available():
             try:
                 combobox_spectro_name = self.comboBoxAvailableSpectro.currentText()
                 devices = self.mayaspectro.find_spectros()
@@ -142,38 +147,44 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
                     if device.serial_number == combobox_spectro_name.split(":")[-1]:
                         self.mayaspectro.device = device
                 self.mayaspectro.connect()
-                self.doubleSpinBoxExposure.setRange(self.mayaspectro.get_exposure_time_lims()[0], 
-                                        self.mayaspectro.get_exposure_time_lims()[1])
+                self.doubleSpinBoxExposure.setRange(
+                    self.mayaspectro.get_exposure_time_lims()[0],
+                    self.mayaspectro.get_exposure_time_lims()[1],
+                )
             except Exception as e:
                 logger.error(e, exc_info=True)
         else:
             print("Maya spectrometer not available")
         self.update_ui()
+
     def disconnect_mayaspectro(self):
         logger.info("Disconnecting spectrometer")
         self.pushButtonDisconnect.setEnabled(False)
         try:
-            self.mayaspectro.disconnect() 
+            self.mayaspectro.disconnect()
         except:
-            if self.mayaspectro.isSpectroAvailable() == False:
+            if self.mayaspectro.is_spectro_available() == False:
                 print("Maya spectrometer not available")
             raise Exception("No spectrometer available")
         self.update_ui()
         logger.info("Disconnected spectrometer")
+
     def getExposure(self):
         logger.info("Setting Exposure time to : %s", self.doubleSpinBoxExposure.value())
         return self.doubleSpinBoxExposure.value()
-    
+
     def getSpectrum(self):
         self.pushButtonMeasure.setEnabled(False)
         logger.info("Acquiring spectrum")
         if self.mayaspectro.isconnected:
-            wavelengths, intensities = self.mayaspectro.spectrum_acquisition(self.getExposure())
-            self.disp.ax.cla() #Clears axis
-            self.disp.plot_basic_line(wavelengths,intensities, label=f"acquisition")
+            wavelengths, intensities = self.mayaspectro.spectrum_acquisition(
+                self.getExposure()
+            )
+            self.disp.ax.cla()  # Clears axis
+            self.disp.plot_basic_line(wavelengths, intensities, label=f"acquisition")
             logger.info("Spectrum acquired")
         self.update_ui()
-    
+
     def setLabelConnected(self, isconnected: bool) -> None:
         if isconnected:
             self.labelStatus.setStyleSheet("background-color: white; color: green;")
@@ -181,7 +192,7 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         else:
             self.labelStatus.setStyleSheet("background-color: white; color: red;")
             self.labelStatus.setText("Not connected")
-    
+
     def update_ui(self):
         # Enable/disable controls if laser is connected or not
         is_connected = self.mayaspectro.isconnected
@@ -193,8 +204,8 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         if is_connected:
             self.textEditModel.setText(self.mayaspectro.spectro.model)
             self.textEditSN.setText(self.mayaspectro.spectro.serial_number)
-        
-        
+
+
 if __name__ == "__main__":
 
     # Set up logging
