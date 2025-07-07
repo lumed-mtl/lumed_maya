@@ -114,8 +114,8 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         self.pushbtnFindSpectro.clicked.connect(self.find_spectro)
         self.pushButtonConnect.clicked.connect(self.connect_mayaspectro)
         self.pushButtonDisconnect.clicked.connect(self.disconnect_mayaspectro)
-        self.doubleSpinBoxExposure.valueChanged.connect(self.getExposure)
-        self.pushButtonMeasure.clicked.connect(self.getSpectrum)
+        self.doubleSpinBoxExposure.valueChanged.connect(self.get_exposure)
+        self.pushButtonMeasure.clicked.connect(self.get_spectrum)
 
     def find_spectro(self):
         logger.info("Looking for connected spectros")
@@ -169,23 +169,23 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         self.update_ui()
         logger.info("Disconnected spectrometer")
 
-    def getExposure(self):
+    def get_exposure(self):
         logger.info("Setting Exposure time to : %s", self.doubleSpinBoxExposure.value())
         return self.doubleSpinBoxExposure.value()
 
-    def getSpectrum(self):
+    def get_spectrum(self):
         self.pushButtonMeasure.setEnabled(False)
         logger.info("Acquiring spectrum")
         if self.mayaspectro.isconnected:
             wavelengths, intensities = self.mayaspectro.spectrum_acquisition(
-                self.getExposure()
+                self.get_exposure()
             )
             self.disp.ax.cla()  # Clears axis
             self.disp.plot_basic_line(wavelengths, intensities, label=f"acquisition")
             logger.info("Spectrum acquired")
         self.update_ui()
 
-    def setLabelConnected(self, isconnected: bool) -> None:
+    def set_label_connected(self, isconnected: bool) -> None:
         if isconnected:
             self.labelStatus.setStyleSheet("background-color: white; color: green;")
             self.labelStatus.setText("Connected")
@@ -199,7 +199,7 @@ class MayaSpectrometerWidget(QWidget, Ui_widgetMayaSpectrometer):
         self.pushButtonConnect.setEnabled(not is_connected)
         self.comboBoxAvailableSpectro.setEnabled(not is_connected)
         self.pushButtonDisconnect.setEnabled(is_connected)
-        self.setLabelConnected(is_connected)
+        self.set_label_connected(is_connected)
         self.pushButtonMeasure.setEnabled(is_connected)
         if is_connected:
             self.textEditModel.setText(self.mayaspectro.spectro.model)
