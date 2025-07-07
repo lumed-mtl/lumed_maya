@@ -7,10 +7,16 @@ build-backend = "setuptools.build_meta"
 name = "lumed_maya"
 version = "0.1"
 authors = [
-    # { name = "Najib Nassiri", email = "" },
+    # { name = "Najib Nassiri", email = "najib.nassiri@polymtl.ca" },
     { name = "Guillaume Sheehy", email = "guillaume.sheehy@polymtl.ca" },
 ]
-dependencies = []
+dependencies = [
+"seabreeze",
+"PyQt5",
+"numpy",
+"matplotlib",
+"pyqt5_fugueicons",
+]
 description = "A module to control the Ocean Insight Maya porable spectrometer"
 readme = "README.md"
 requires-python = ">=3.8"
